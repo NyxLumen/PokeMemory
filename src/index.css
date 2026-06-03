@@ -16,8 +16,10 @@
   --pokedex-led-blue: #00ccff;
   --pokedex-led-yellow: #ffcb05;
   --pokedex-led-green: #39ff14;
-  --lcd-bg: #09170e;
-  --lcd-text: #39ff14;
+  --lcd-bg: #f7f6ed; /* FireRed dialogue box cream */
+  --lcd-text: #2a2c35; /* Charcoal text */
+  --lcd-border: #dc2626; /* FireRed primary orange-red */
+  --lcd-accent: #991b1b; /* Crimson text label */
   --text-primary: #f3f4f6;
   --text-secondary: #9ca3af;
   --card-back-bg: #1e202e;
@@ -37,8 +39,6 @@ body.light-theme {
   --pokedex-led-blue: #dc2626; /* Game Boy power light red */
   --pokedex-led-yellow: #9ca3af;
   --pokedex-led-green: #374151;
-  --lcd-bg: #7c827b;
-  --lcd-text: #0f172a;
   --text-primary: #1f2937;
   --text-secondary: #4b5563;
   --card-back-bg: #daded8;

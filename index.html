@@ -2,9 +2,22 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href="/src/assets/hero.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>pokememory</title>
+    <meta name="description" content="A premium 3D card matching game themed around Pokémon, featuring animated sprites, a custom chiptune synthesizer loop, and local leaderboards." />
+    <title>PokéMemory - Retro Card Matching Game</title>
+    <meta name="color-scheme" content="light dark" />
+    <script>
+      (function() {
+        const theme = localStorage.getItem("pokememory_theme") || "dark";
+        if (theme === "light") {
+          document.documentElement.classList.add("light-theme");
+          document.addEventListener("DOMContentLoaded", () => {
+            document.body.classList.add("light-theme");
+          });
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

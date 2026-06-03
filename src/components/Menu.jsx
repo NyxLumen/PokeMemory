@@ -1,21 +1,20 @@
 import { useState } from "react";
 import { audioHelper } from "../utils/audio";
-import { Award, Play, Volume2, VolumeX, Moon, Sun } from "lucide-react";
+import { Play, Volume2, VolumeX, Moon, Sun, Award } from "lucide-react";
 
 export default function Menu({ onStartGame, theme, toggleTheme, soundEnabled, toggleSound }) {
   const [difficulty, setDifficulty] = useState("medium"); // easy, medium, hard
-  const [highScores] = useState(() => {
-    const storedScores = localStorage.getItem("pokememory_highscores");
-    if (storedScores) {
+  const [bestStreaks] = useState(() => {
+    const storedStreaks = localStorage.getItem("pokememory_best_streaks");
+    if (storedStreaks) {
       try {
-        return JSON.parse(storedScores);
+        return JSON.parse(storedStreaks);
       } catch (e) {
-        console.error("Error loading high scores", e);
+        console.error("Error loading best streaks", e);
       }
     }
-    return { easy: [], medium: [], hard: [] };
+    return { easy: 0, medium: 0, hard: 0 };
   });
-  const [showLeaderboard, setShowLeaderboard] = useState(false);
 
   const handleDifficultySelect = (diff) => {
     audioHelper.playClick();
@@ -27,6 +26,12 @@ export default function Menu({ onStartGame, theme, toggleTheme, soundEnabled, to
     onStartGame(difficulty);
   };
 
+  const difficultyMax = {
+    easy: 6,
+    medium: 12,
+    hard: 18
+  };
+
   return (
     <div className="menu-container fade-in">
       {/* Settings Row */}
@@ -36,14 +41,14 @@ export default function Menu({ onStartGame, theme, toggleTheme, soundEnabled, to
           onClick={() => { audioHelper.playClick(); toggleTheme(); }}
           title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
         >
-          {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
+          {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
         </button>
         <button 
           className="settings-btn" 
           onClick={() => { audioHelper.playClick(); toggleSound(); }}
-          title={soundEnabled ? "Mute Sounds" : "Enable Sounds"}
+          title={soundEnabled ? "Mute Sound/BGM" : "Enable Sound/BGM"}
         >
-          {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
+          {soundEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
         </button>
       </div>
 
@@ -54,13 +59,13 @@ export default function Menu({ onStartGame, theme, toggleTheme, soundEnabled, to
           <span className="title-poke">Poké</span>
           <span className="title-memory">Memory</span>
         </h1>
-        <p className="game-subtitle">Train Your Brain. Catch 'Em All.</p>
+        <p className="game-subtitle">Avoid Double Clicks. Catch 'Em All.</p>
       </div>
 
       <div className="menu-card">
         {/* Difficulty Selection */}
         <div className="menu-section">
-          <h3>Choose Difficulty</h3>
+          <h3>Difficulty</h3>
           <div className="difficulty-grid">
             {["easy", "medium", "hard"].map((diff) => (
               <button
@@ -74,54 +79,26 @@ export default function Menu({ onStartGame, theme, toggleTheme, soundEnabled, to
             ))}
           </div>
           <p className="difficulty-desc">
-            Matches needed: {difficulty === "easy" ? 6 : difficulty === "medium" ? 8 : 12}
+            Cards to clear: {difficultyMax[difficulty]}
           </p>
+        </div>
+
+        {/* Best Streak display */}
+        <div className="menu-section" style={{ textAlign: "center", background: "rgba(0,0,0,0.15)", padding: "10px", borderRadius: "8px" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", fontSize: "0.85rem", color: "var(--text-secondary)" }}>
+            <Award size={14} style={{ color: "var(--pokedex-led-yellow)" }} />
+            <span>BEST STREAK</span>
+          </div>
+          <div style={{ fontSize: "1.2rem", fontWeight: "800", marginTop: "4px", fontFamily: "var(--font-retro)", color: "var(--pokedex-led-yellow)" }}>
+            {bestStreaks[difficulty] || 0} / {difficultyMax[difficulty]}
+          </div>
         </div>
 
         {/* Action Button */}
         <button className="start-btn pulse" onClick={handleStart}>
-          <Play size={24} fill="currentColor" />
+          <Play size={20} fill="currentColor" />
           START GAME
         </button>
-
-        {/* High Scores Toggle */}
-        <button 
-          className="leaderboard-toggle-btn"
-          onClick={() => { audioHelper.playClick(); setShowLeaderboard(!showLeaderboard); }}
-        >
-          <Award size={18} />
-          {showLeaderboard ? "Hide High Scores" : "Show High Scores"}
-        </button>
-
-        {/* Leaderboards */}
-        {showLeaderboard && (
-          <div className="leaderboard-section fade-in">
-            <h4 className="leaderboard-title">
-              Top 5 Leaderboard - {difficulty.toUpperCase()}
-            </h4>
-            <div className="score-list">
-              {highScores[difficulty] && highScores[difficulty].length > 0 ? (
-                highScores[difficulty].map((score, index) => (
-                  <div key={index} className="score-row">
-                    <span className="score-rank">#{index + 1}</span>
-                    <span className="score-date">
-                      {new Date(score.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                    </span>
-                    <span className="score-stats">
-                      <strong>{score.moves}</strong> moves ({score.accuracy}%)
-                    </span>
-                  </div>
-                ))
-              ) : (
-                <div className="empty-scores">No scores yet. Be the first!</div>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-      
-      <div className="footer-credits">
-        Powered by PokeAPI • Synthesized 8-Bit Audio
       </div>
     </div>
   );

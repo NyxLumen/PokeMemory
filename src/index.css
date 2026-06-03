@@ -6,37 +6,45 @@
   --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-retro: 'Press Start 2P', monospace;
 
-  /* Layout */
-  --border-radius-sm: 8px;
-  --border-radius-md: 16px;
-  --border-radius-lg: 24px;
-  
-  /* Defaults to Dark Theme (Retro Cyberpunk / PokéDex) */
-  --bg-primary: #0a0b10;
-  --bg-gradient: radial-gradient(circle at 50% 0%, #171926 0%, #0a0b10 70%);
-  --bg-glass: rgba(23, 25, 38, 0.6);
-  --border-glass: rgba(255, 255, 255, 0.08);
-  --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  /* Theme: Dark Mode = Crimson PokéDex Console */
+  --bg-primary: #0d0e12;
+  --bg-gradient: radial-gradient(circle at 50% 0%, #1c1d28 0%, #07080b 80%);
+  --pokedex-chassis: #c21807; /* PokéDex Crimson */
+  --pokedex-chassis-dark: #8b0000;
+  --pokedex-bezel: #252630;
+  --pokedex-screen: #0a0b10;
+  --pokedex-led-blue: #00ccff;
+  --pokedex-led-yellow: #ffcb05;
+  --pokedex-led-green: #39ff14;
+  --lcd-bg: #09170e;
+  --lcd-text: #39ff14;
   --text-primary: #f3f4f6;
   --text-secondary: #9ca3af;
-  --accent: #ffcb05; /* Pokémon Yellow */
-  --accent-glow: rgba(255, 203, 5, 0.3);
-  --accent-blue: #3b4cca; /* Pokémon Blue */
-  --card-back-bg: #1c1e2d;
-  --accent-red: #ff3e3e;
+  --card-back-bg: #1e202e;
+  --border-glass: rgba(255, 255, 255, 0.08);
+  --shadow-chassis: 0 20px 50px rgba(0, 0, 0, 0.6);
+  --shadow-screen: inset 0 0 20px rgba(0, 0, 0, 0.9);
 }
 
-/* Light Theme Override */
+/* Theme: Light Mode = Classic 1989 DMG Game Boy Grey */
 body.light-theme {
-  --bg-primary: #f3f4f6;
-  --bg-gradient: radial-gradient(circle at 50% 0%, #ffffff 0%, #e5e7eb 100%);
-  --bg-glass: rgba(255, 255, 255, 0.7);
-  --border-glass: rgba(0, 0, 0, 0.08);
-  --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+  --bg-primary: #cfd3ca;
+  --bg-gradient: radial-gradient(circle at 50% 0%, #e2e6dd 0%, #bdc1b8 100%);
+  --pokedex-chassis: #c3c7c0; /* Game Boy Grey */
+  --pokedex-chassis-dark: #9da19a;
+  --pokedex-bezel: #707572;
+  --pokedex-screen: #879172; /* Green LCD Screen tint */
+  --pokedex-led-blue: #dc2626; /* Game Boy power light red */
+  --pokedex-led-yellow: #9ca3af;
+  --pokedex-led-green: #374151;
+  --lcd-bg: #7c827b;
+  --lcd-text: #0f172a;
   --text-primary: #1f2937;
   --text-secondary: #4b5563;
-  --card-back-bg: #e5e7eb;
-  --accent-glow: rgba(59, 76, 202, 0.2);
+  --card-back-bg: #daded8;
+  --border-glass: rgba(0, 0, 0, 0.1);
+  --shadow-chassis: 0 20px 50px rgba(0, 0, 0, 0.25);
+  --shadow-screen: inset 0 0 15px rgba(0, 0, 0, 0.4);
 }
 
 * {
@@ -54,7 +62,7 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   line-height: 1.5;
-  transition: background 0.5s ease, color 0.3s ease;
+  transition: background 0.4s ease, color 0.3s ease;
 }
 
 #root {

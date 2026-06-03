@@ -4,8 +4,7 @@ import { audioHelper } from "../utils/audio";
 export default function StatsBar({
   matchedCount,
   totalPairs,
-  moves,
-  accuracy,
+  bestStreak,
   soundEnabled,
   toggleSound,
   onRestart,
@@ -20,46 +19,42 @@ export default function StatsBar({
     <div className="stats-bar fade-in">
       <div className="stats-left">
         <button 
-          className="icon-btn back-btn" 
+          className="lcd-btn" 
           onClick={() => handleActionClick(onGoBack)}
-          title="Return to Menu"
+          title="Return to Main Menu"
         >
-          <ArrowLeft size={18} />
-          <span>Menu</span>
+          <ArrowLeft size={10} />
+          <span>MENU</span>
         </button>
       </div>
 
       <div className="stats-center">
         <div className="stat-pill">
-          <span className="stat-label">Pairs</span>
+          <span className="stat-label">CAUGHT</span>
           <span className="stat-val">{matchedCount} / {totalPairs}</span>
         </div>
         <div className="stat-pill">
-          <span className="stat-label">Moves</span>
-          <span className="stat-val">{moves}</span>
-        </div>
-        <div className="stat-pill">
-          <span className="stat-label">Accuracy</span>
-          <span className="stat-val">{accuracy}%</span>
+          <span className="stat-label">BEST</span>
+          <span className="stat-val">{bestStreak}</span>
         </div>
       </div>
 
       <div className="stats-right">
         <button 
-          className="icon-btn sound-toggle" 
+          className="lcd-btn" 
           onClick={() => handleActionClick(toggleSound)}
-          title={soundEnabled ? "Mute sound effects and BGM" : "Enable sound effects and BGM"}
+          title={soundEnabled ? "Mute Game" : "Unmute Game"}
         >
-          {soundEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
+          {soundEnabled ? <Volume2 size={10} /> : <VolumeX size={10} />}
         </button>
         
         <button 
-          className="icon-btn restart-btn" 
+          className="lcd-btn" 
           onClick={() => handleActionClick(onRestart)}
-          title="Restart Game"
+          title="Reset Game"
         >
-          <RotateCcw size={18} />
-          <span>Reset</span>
+          <RotateCcw size={10} />
+          <span>RESET</span>
         </button>
       </div>
     </div>

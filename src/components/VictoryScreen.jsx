@@ -3,10 +3,7 @@ import { RotateCcw, Home, Star } from "lucide-react";
 import { audioHelper } from "../utils/audio";
 
 export default function VictoryScreen({
-  difficulty,
-  moves,
-  accuracy,
-  isHighScore,
+  streak,
   onPlayAgain,
   onGoHome
 }) {
@@ -31,7 +28,6 @@ export default function VictoryScreen({
     window.addEventListener("resize", resizeCanvas);
     resizeCanvas();
 
-    // Particle class simulating colorful paper confetti
     class Confetti {
       constructor(x, y, angle, spread) {
         this.x = x;
@@ -39,7 +35,6 @@ export default function VictoryScreen({
         this.size = Math.random() * 8 + 6;
         this.color = `hsl(${Math.random() * 360}, 95%, 60%)`;
         
-        // Initial velocity vector based on angle and spread
         const speed = Math.random() * 15 + 10;
         const radAngle = (angle + (Math.random() * spread - spread / 2)) * (Math.PI / 180);
         this.vx = Math.cos(radAngle) * speed;
@@ -79,28 +74,23 @@ export default function VictoryScreen({
 
     const particles = [];
     
-    // Spawn burst function
     const spawnBurst = (x, y, angle, spread, count = 40) => {
       for (let i = 0; i < count; i++) {
         particles.push(new Confetti(x, y, angle, spread));
       }
     };
 
-    // Shoot fountains initially
     spawnBurst(0, canvas.height, -45, 30, 60);
     spawnBurst(canvas.width, canvas.height, -135, 30, 60);
 
-    // Periodic smaller bursts on click/randomly
     let timer = 0;
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
-      // Randomly spawn gentle drifting particles from top
       if (Math.random() < 0.2 && particles.length < 150) {
         particles.push(new Confetti(Math.random() * canvas.width, -10, 90, 40));
       }
 
-      // Intermittent bursts from corners
       timer++;
       if (timer % 90 === 0 && particles.length < 100) {
         spawnBurst(0, canvas.height, -45, 25, 20);
@@ -111,7 +101,6 @@ export default function VictoryScreen({
         const p = particles[i];
         p.update();
         p.draw();
-        // Remove dead/off-screen particles
         if (p.opacity <= 0 || p.y > canvas.height + 20 || p.x < -20 || p.x > canvas.width + 20) {
           particles.splice(i, 1);
         }
@@ -122,7 +111,6 @@ export default function VictoryScreen({
 
     animate();
 
-    // Spawn on mouse click
     const handleCanvasClick = (e) => {
       spawnBurst(e.clientX, e.clientY, -90, 360, 25);
     };
@@ -135,138 +123,39 @@ export default function VictoryScreen({
     };
   }, []);
 
-  // Determine Pokémon trainer badge based on moves
-  const getBadgeInfo = () => {
-    let tier = "Poké Ball";
-    let desc = "Keep practicing to improve your memory!";
-    let color = "#ef4444";
-    let iconClass = "poke-ball-badge";
-
-    if (difficulty === "easy") {
-      if (moves <= 8) {
-        tier = "Master Ball";
-        desc = "Incredible! A true Legendary match!";
-        color = "#a855f7";
-        iconClass = "master-ball-badge";
-      } else if (moves <= 12) {
-        tier = "Ultra Ball";
-        desc = "Amazing memory skills!";
-        color = "#eab308";
-        iconClass = "ultra-ball-badge";
-      } else if (moves <= 16) {
-        tier = "Great Ball";
-        desc = "Great job, solid catching!";
-        color = "#3b82f6";
-        iconClass = "great-ball-badge";
-      }
-    } else if (difficulty === "medium") {
-      if (moves <= 11) {
-        tier = "Master Ball";
-        desc = "Flawless! Master-tier memory!";
-        color = "#a855f7";
-        iconClass = "master-ball-badge";
-      } else if (moves <= 16) {
-        tier = "Ultra Ball";
-        desc = "Superb! Highly efficient!";
-        color = "#eab308";
-        iconClass = "ultra-ball-badge";
-      } else if (moves <= 22) {
-        tier = "Great Ball";
-        desc = "Nice work, well done!";
-        color = "#3b82f6";
-        iconClass = "great-ball-badge";
-      }
-    } else {
-      // hard
-      if (moves <= 18) {
-        tier = "Master Ball";
-        desc = "Unbelievable! Pure Champion status!";
-        color = "#a855f7";
-        iconClass = "master-ball-badge";
-      } else if (moves <= 26) {
-        tier = "Ultra Ball";
-        desc = "Outstanding focus and mapping!";
-        color = "#eab308";
-        iconClass = "ultra-ball-badge";
-      } else if (moves <= 36) {
-        tier = "Great Ball";
-        desc = "Impressive completion!";
-        color = "#3b82f6";
-        iconClass = "great-ball-badge";
-      }
-    }
-
-    return { tier, desc, color, iconClass };
-  };
-
-  const badge = getBadgeInfo();
-
   return (
-    <div className="victory-container fade-in">
+    <div className="screen-dialog fade-in">
       <canvas ref={canvasRef} className="confetti-canvas"></canvas>
 
-      <div className="victory-card">
-        {/* Confetti Banner */}
-        <div className="victory-banner">
-          <h2>VICTORY!</h2>
-        </div>
+      <div className="dialog-banner victory">
+        <h2>VICTORY!</h2>
+      </div>
 
-        {/* Dynamic Badge Display */}
-        <div className="badge-display">
-          <div className={`badge-icon-wrapper ${badge.iconClass}`}>
-            <div className="badge-inner-ball"></div>
-          </div>
-          <h3 className="badge-tier" style={{ color: badge.color }}>
-            {badge.tier} Tier
-          </h3>
-          <p className="badge-desc">{badge.desc}</p>
-        </div>
+      <div className="new-highscore-badge scale-up" style={{ margin: "15px 0" }}>
+        <Star size={14} fill="currentColor" />
+        <span>100% CAUGHT!</span>
+        <Star size={14} fill="currentColor" />
+      </div>
 
-        {/* High Score Celebration */}
-        {isHighScore && (
-          <div className="new-highscore-badge scale-up">
-            <Star size={16} fill="currentColor" />
-            <span>NEW HIGH SCORE!</span>
-            <Star size={16} fill="currentColor" />
-          </div>
-        )}
+      <p style={{ fontSize: "1.1rem", fontWeight: "600", margin: "10px 0" }}>
+        Excellent job! You caught all {streak} Pokémon without making a single duplicate scan!
+      </p>
 
-        {/* Stats Grid */}
-        <div className="victory-stats-grid">
-          <div className="victory-stat-box">
-            <span className="v-stat-val">{moves}</span>
-            <span className="v-stat-lbl">Total Moves</span>
-          </div>
-          <div className="victory-stat-box">
-            <span className="v-stat-val">{accuracy}%</span>
-            <span className="v-stat-lbl">Accuracy</span>
-          </div>
-          <div className="victory-stat-box">
-            <span className="v-stat-val">
-              {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
-            </span>
-            <span className="v-stat-lbl">Difficulty</span>
-          </div>
-        </div>
-
-        {/* Actions */}
-        <div className="victory-actions">
-          <button 
-            className="victory-btn play-again-btn" 
-            onClick={() => { audioHelper.playClick(); onPlayAgain(); }}
-          >
-            <RotateCcw size={18} />
-            <span>PLAY AGAIN</span>
-          </button>
-          
-          <button 
-            className="victory-btn home-btn" 
-            onClick={() => { audioHelper.playClick(); onGoHome(); }}
-          >
-            <Home size={18} />
-            <span>MAIN MENU</span>
-          </button>
-        </div>
+      <div className="dialog-actions" style={{ zIndex: 10, position: "relative", marginTop: "20px" }}>
+        <button 
+          className="dialog-btn primary-dialog-btn" 
+          onClick={() => { audioHelper.playClick(); onPlayAgain(); }}
+        >
+          <RotateCcw size={16} />
+          <span>PLAY AGAIN</span>
+        </button>
+        <button 
+          className="dialog-btn secondary-dialog-btn" 
+          onClick={() => { audioHelper.playClick(); onGoHome(); }}
+        >
+          <Home size={16} />
+          <span>MENU</span>
+        </button>
       </div>
     </div>
   );

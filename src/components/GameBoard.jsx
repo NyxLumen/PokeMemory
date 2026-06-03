@@ -3,43 +3,39 @@ import Card from "./Card";
 export default function GameBoard({
   difficulty,
   cards,
-  selectedIndices,
-  matchedIds,
-  mismatchedIndices,
+  showFront,
+  wrongCardId,
   onCardSelect,
   isProcessing
 }) {
-  
   const getGridClass = () => {
     switch (difficulty) {
       case "easy":
-        return "grid-easy"; // 3x4 (12 cards)
+        return "grid-easy"; // 6 cards (2x3)
       case "hard":
-        return "grid-hard"; // 4x6 (24 cards)
+        return "grid-hard"; // 18 cards (3x6)
       case "medium":
       default:
-        return "grid-medium"; // 4x4 (16 cards)
+        return "grid-medium"; // 12 cards (3x4)
     }
   };
 
   return (
     <div className="gameboard-container fade-in">
       <div className={`game-grid ${getGridClass()}`}>
-        {cards.map((card, index) => {
-          const isFlipped = selectedIndices.includes(index) || matchedIds.includes(card.id);
-          const isMatched = matchedIds.includes(card.id);
-          const shouldShake = mismatchedIndices.includes(index);
+        {cards.map((card) => {
+          // If this is the card that caused the game over, trigger shake
+          const shouldShake = wrongCardId === card.id;
 
           return (
             <Card
               key={card.uniqueId}
               card={card}
-              isFlipped={isFlipped}
-              isMatched={isMatched}
+              showFront={showFront}
               shouldShake={shouldShake}
               onClick={() => {
                 if (!isProcessing) {
-                  onCardSelect(index);
+                  onCardSelect(card.id);
                 }
               }}
             />

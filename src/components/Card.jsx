@@ -1,33 +1,32 @@
 import { TYPE_COLORS } from "../utils/pokemon";
 
-export default function Card({ card, onClick, isFlipped, isMatched, shouldShake }) {
+export default function Card({ card, onClick, showFront, shouldShake }) {
   const typeColorInfo = TYPE_COLORS[card.type] || TYPE_COLORS.normal;
   
-  // Custom styling for the glowing shadow when matched or flipped
-  const glowStyle = isFlipped || isMatched
+  // Custom styling for the glowing shadow when face-up
+  const glowStyle = showFront
     ? {
-        boxShadow: `0 0 20px 2px ${typeColorInfo.glow}`,
+        boxShadow: `0 0 15px 2px ${typeColorInfo.glow}`,
         border: `1.5px solid ${typeColorInfo.color}`
       }
     : {};
 
   const handleCardClick = () => {
-    if (!isFlipped && !isMatched) {
+    if (showFront) {
       onClick();
     }
   };
 
   return (
     <div 
-      className={`pokemon-card-wrapper ${isFlipped ? "flipped" : ""} ${isMatched ? "matched" : ""} ${shouldShake ? "shake" : ""}`}
+      className={`pokemon-card-wrapper ${showFront ? "flipped" : ""} ${shouldShake ? "shake" : ""}`}
       onClick={handleCardClick}
     >
       <div className="pokemon-card-inner" style={glowStyle}>
         
-        {/* Card Back (Hidden when flipped) */}
+        {/* Card Back (Pokéball back shown when showFront is false) */}
         <div className="pokemon-card-back">
           <div className="card-back-pattern">
-            {/* Geometric Pokéball Vector Design */}
             <div className="pokeball-back-icon">
               <div className="pokeball-top"></div>
               <div className="pokeball-center-line"></div>
@@ -39,11 +38,11 @@ export default function Card({ card, onClick, isFlipped, isMatched, shouldShake 
           </div>
         </div>
 
-        {/* Card Front (Shown when flipped) */}
+        {/* Card Front (Pokémon image shown when showFront is true) */}
         <div 
           className="pokemon-card-front" 
           style={{ 
-            background: `rgba(23, 25, 38, 0.75)`, 
+            background: `rgba(23, 25, 38, 0.85)`, 
             border: `1.5px solid ${typeColorInfo.color}`
           }}
         >
@@ -61,7 +60,7 @@ export default function Card({ card, onClick, isFlipped, isMatched, shouldShake 
               className="pokemon-type-badge" 
               style={{ 
                 background: typeColorInfo.gradient,
-                boxShadow: `0 2px 6px ${typeColorInfo.glow}`
+                boxShadow: `0 1px 4px ${typeColorInfo.glow}`
               }}
             >
               {card.type.toUpperCase()}

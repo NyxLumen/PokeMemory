@@ -156,30 +156,14 @@ export async function getPokemonDeck(pairCount) {
 
   const results = await Promise.all(fetchPromises);
   
-  // 3. Create pairs with unique card instances
-  const deck = [];
-  results.forEach((poke) => {
-    // Card 1
-    deck.push({
-      uniqueId: `card-${poke.id}-a`,
-      id: poke.id,
-      name: poke.name,
-      type: poke.type,
-      sprite: poke.sprite,
-      isFlipped: false,
-      isMatched: false
-    });
-    // Card 2
-    deck.push({
-      uniqueId: `card-${poke.id}-b`,
-      id: poke.id,
-      name: poke.name,
-      type: poke.type,
-      sprite: poke.sprite,
-      isFlipped: false,
-      isMatched: false
-    });
-  });
+  // 3. Create unique card instances (no pairs)
+  const deck = results.map((poke) => ({
+    uniqueId: `card-${poke.id}`,
+    id: poke.id,
+    name: poke.name,
+    type: poke.type,
+    sprite: poke.sprite
+  }));
 
   // 4. Shuffle and return
   return shuffle(deck);

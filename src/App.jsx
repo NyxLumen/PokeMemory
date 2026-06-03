@@ -4,25 +4,36 @@ import { audioHelper } from "./utils/audio";
 import Menu from "./components/Menu";
 import StatsBar from "./components/StatsBar";
 import GameBoard from "./components/GameBoard";
+import GameOverScreen from "./components/GameOverScreen";
 import VictoryScreen from "./components/VictoryScreen";
 import "./App.css";
 
+const difficultyCounts = {
+  easy: 6,
+  medium: 12,
+  hard: 18
+};
+
 function App() {
-  const [gameState, setGameState] = useState("menu"); // menu, playing, victory
-  const [difficulty, setDifficulty] = useState("medium"); // easy, medium, hard
+  const [gameState, setGameState] = useState("menu"); // menu, playing, gameover, victory
+  const [difficulty, setDifficulty] = useState("medium");
   
-  // Game state
+  // Game Board states
   const [cards, setCards] = useState([]);
-  const [selectedIndices, setSelectedIndices] = useState([]);
-  const [matchedIds, setMatchedIds] = useState([]);
-  const [mismatchedIndices, setMismatchedIndices] = useState([]);
-  const [moves, setMoves] = useState(0);
-  const [accuracy, setAccuracy] = useState(100);
+  const [clickedIds, setClickedIds] = useState(new Set());
+  const [showFront, setShowFront] = useState(true);
+  const [wrongCardId, setWrongCardId] = useState(null);
+  
   const [loading, setLoading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isHighScore, setIsHighScore] = useState(false);
 
-  // Settings state (persistent)
+  // Best Streaks per difficulty
+  const [bestStreaks, setBestStreaks] = useState(() => {
+    const saved = localStorage.getItem("pokememory_best_streaks");
+    return saved ? JSON.parse(saved) : { easy: 0, medium: 0, hard: 0 };
+  });
+
+  // Settings
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem("pokememory_theme") || "dark";
   });
@@ -31,28 +42,23 @@ function App() {
     return saved !== null ? JSON.parse(saved) : true;
   });
 
-  const difficultyPairs = {
-    easy: 6,
-    medium: 8,
-    hard: 12
-  };
-
-  // Sync theme to document body
+  // Sync theme class
   useEffect(() => {
     if (theme === "light") {
       document.body.classList.add("light-theme");
+      document.documentElement.classList.add("light-theme");
     } else {
       document.body.classList.remove("light-theme");
+      document.documentElement.classList.remove("light-theme");
     }
     localStorage.setItem("pokememory_theme", theme);
   }, [theme]);
 
-  // Sync sound settings to audio helper and localStorage
+  // Sync sound settings
   useEffect(() => {
     localStorage.setItem("pokememory_sound", JSON.stringify(soundEnabled));
     if (soundEnabled) {
-      audioHelper.setVolume(0.5, 0.18);
-      // Start BGM if in play state
+      audioHelper.setVolume(0.5, 0.15);
       if (gameState === "playing") {
         audioHelper.startBGM();
       }
@@ -62,7 +68,7 @@ function App() {
     }
   }, [soundEnabled, gameState]);
 
-  // Cleanup audio on component unmount
+  // Cleanup BGM
   useEffect(() => {
     return () => {
       audioHelper.stopBGM();
@@ -77,24 +83,21 @@ function App() {
     setSoundEnabled((prev) => !prev);
   };
 
-  // Start the game and fetch the deck
+  // Start/Restart Game
   const handleStartGame = async (selectedDiff) => {
     setDifficulty(selectedDiff);
     setLoading(true);
     setGameState("playing");
-    setMoves(0);
-    setAccuracy(100);
-    setMatchedIds([]);
-    setSelectedIndices([]);
-    setMismatchedIndices([]);
-    setIsHighScore(false);
+    setClickedIds(new Set());
+    setWrongCardId(null);
+    setShowFront(true);
+    setIsProcessing(false);
 
     try {
-      const pairCount = difficultyPairs[selectedDiff];
-      const deck = await getPokemonDeck(pairCount);
+      const count = difficultyCounts[selectedDiff];
+      const deck = await getPokemonDeck(count);
       setCards(deck);
-      
-      // Start the BGM if sound is active
+
       if (soundEnabled) {
         audioHelper.startBGM();
       }
@@ -105,174 +108,208 @@ function App() {
     }
   };
 
+  // Fisher-Yates array shuffler
+  const shuffleArray = (array) => {
+    const arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  };
+
   // Card select logic
-  const handleCardSelect = (index) => {
-    if (isProcessing || selectedIndices.includes(index) || matchedIds.includes(cards[index].id)) {
-      return;
-    }
+  const handleCardSelect = (id) => {
+    if (isProcessing || !showFront) return;
 
-    // Play flip sound
-    audioHelper.playFlip();
+    if (clickedIds.has(id)) {
+      // DUPLICATE CLICKED = GAME OVER
+      setWrongCardId(id);
+      setIsProcessing(true);
+      audioHelper.stopBGM();
+      
+      const currentStreak = clickedIds.size;
+      updateBestStreak(currentStreak);
 
-    const newSelection = [...selectedIndices, index];
-    setSelectedIndices(newSelection);
+      // Delay transition to GameOver screen so they see the card shake
+      setTimeout(() => {
+        setGameState("gameover");
+        setIsProcessing(false);
+      }, 900);
+    } else {
+      // SAFE CLICK
+      const newClicked = new Set(clickedIds);
+      newClicked.add(id);
+      setClickedIds(newClicked);
 
-    if (newSelection.length === 2) {
-      const firstIdx = newSelection[0];
-      const secondIdx = newSelection[1];
-      const newMoves = moves + 1;
-      setMoves(newMoves);
+      const targetCount = difficultyCounts[difficulty];
 
-      const isMatch = cards[firstIdx].id === cards[secondIdx].id;
-
-      if (isMatch) {
-        // MATCH FOUND
-        const updatedMatched = [...matchedIds, cards[firstIdx].id];
-        setMatchedIds(updatedMatched);
-        setSelectedIndices([]);
-        
-        // Play match sound
-        audioHelper.playMatch();
-
-        // Calculate Accuracy
-        const totalPairs = difficultyPairs[difficulty];
-        const matchPct = Math.round((updatedMatched.length / newMoves) * 100);
-        setAccuracy(Math.min(100, matchPct));
-
-        // Check for Win condition
-        if (updatedMatched.length === totalPairs) {
-          handleWin(newMoves, Math.min(100, matchPct));
-        }
-      } else {
-        // MISMATCH
+      if (newClicked.size === targetCount) {
+        // VICTORY
         setIsProcessing(true);
-        setMismatchedIndices([firstIdx, secondIdx]);
-        
-        // Play buzz sound
-        audioHelper.playMismatch();
+        audioHelper.stopBGM();
+        updateBestStreak(targetCount);
 
-        // Flip back after animation delay
         setTimeout(() => {
-          setSelectedIndices([]);
-          setMismatchedIndices([]);
+          setGameState("victory");
           setIsProcessing(false);
-        }, 1000);
+        }, 800);
+      } else {
+        // SHUFFLE SEQUENCE
+        setIsProcessing(true);
+        setShowFront(false); // Rotate face-down
+        audioHelper.playFlip(); // Play card slide/flip SFX
 
-        // Recalculate accuracy
-        const matchPct = Math.round((matchedIds.length / newMoves) * 100);
-        setAccuracy(Math.min(100, matchPct));
+        // Wait for flip-down animation to complete, then shuffle
+        setTimeout(() => {
+          setCards((prevCards) => shuffleArray(prevCards));
+          
+          // Small delay before flipping face-up again
+          setTimeout(() => {
+            audioHelper.playMatch(); // Play retro score sound
+            setShowFront(true); // Rotate face-up
+            setIsProcessing(false);
+          }, 150);
+        }, 350);
       }
     }
   };
 
-  // Win logic
-  const handleWin = (finalMoves, finalAccuracy) => {
-    audioHelper.stopBGM();
-    
-    // Check and save High Score
-    const storedScores = localStorage.getItem("pokememory_highscores");
-    let scoresObj = { easy: [], medium: [], hard: [] };
-    
-    if (storedScores) {
-      try {
-        scoresObj = JSON.parse(storedScores);
-      } catch (e) {
-        console.error(e);
-      }
+  // Update best streak record
+  const updateBestStreak = (streakVal) => {
+    const currentBest = bestStreaks[difficulty] || 0;
+    if (streakVal > currentBest) {
+      const newBest = { ...bestStreaks, [difficulty]: streakVal };
+      setBestStreaks(newBest);
+      localStorage.setItem("pokememory_best_streaks", JSON.stringify(newBest));
     }
-
-    const currentDiffScores = scoresObj[difficulty] || [];
-    const newScore = {
-      moves: finalMoves,
-      accuracy: finalAccuracy,
-      date: Date.now()
-    };
-
-    // Add score, sort primarily by fewest moves, then by highest accuracy
-    const updatedScores = [...currentDiffScores, newScore]
-      .sort((a, b) => a.moves - b.moves || b.accuracy - a.accuracy)
-      .slice(0, 5); // Keep top 5
-
-    scoresObj[difficulty] = updatedScores;
-    localStorage.setItem("pokememory_highscores", JSON.stringify(scoresObj));
-
-    // Check if the current game is one of the top scores
-    const isTopScore = updatedScores.some(
-      (score) => score.date === newScore.date
-    );
-    setIsHighScore(isTopScore);
-
-    // Navigate to victory screen after cards finish matching animation
-    setTimeout(() => {
-      setGameState("victory");
-    }, 800);
   };
 
-  // Exit back to main menu
   const handleGoHome = () => {
     audioHelper.stopBGM();
     setGameState("menu");
   };
 
+  // Find duplicate card details for gameover display
+  const getDuplicateCard = () => {
+    return cards.find((c) => c.id === wrongCardId) || null;
+  };
+
+  // Select dynamic status LED based on state
+  const getLedClass = () => {
+    if (gameState === "gameover") return "red";
+    if (gameState === "victory") return "green";
+    if (loading) return "yellow";
+    return "green";
+  };
+
   return (
     <div className="app-container">
-      {gameState === "menu" && (
-        <Menu
-          onStartGame={handleStartGame}
-          theme={theme}
-          toggleTheme={toggleTheme}
-          soundEnabled={soundEnabled}
-          toggleSound={toggleSound}
-        />
-      )}
+      {/* SKEUOMORPHIC POKEDEX FRAME */}
+      <div className="pokedex-wrapper">
+        {/* Top Camera Lens & Indicator Lights */}
+        <div className="pokedex-top-bar">
+          <div className="pokedex-camera-lens"></div>
+          <div className="pokedex-status-leds">
+            <div className={`led ${getLedClass()}`}></div>
+            <div className="led yellow"></div>
+            <div className="led green"></div>
+          </div>
+          <div style={{ marginLeft: "auto", fontFamily: "var(--font-retro)", fontSize: "0.45rem", color: "rgba(255,255,255,0.4)" }}>
+            SYSTEM-89
+          </div>
+        </div>
 
-      {gameState === "playing" && (
-        <>
-          {loading ? (
-            <div className="logo-area scale-up" style={{ marginTop: "12vh" }}>
-              <div className="pokeball-spinner"></div>
-              <h2 className="game-title" style={{ fontSize: "2rem", textShadow: "none" }}>
-                <span className="title-poke">Searching...</span>
-              </h2>
-              <p className="game-subtitle">Catching wild Pokémon from Sinnoh & Unova</p>
-            </div>
-          ) : (
-            <>
-              <StatsBar
-                difficulty={difficulty}
-                matchedCount={matchedIds.length}
-                totalPairs={difficultyPairs[difficulty]}
-                moves={moves}
-                accuracy={accuracy}
+        {/* Display Screen Screen Frame */}
+        <div className="pokedex-screen-bezel">
+          <div className="pokedex-screen-inner">
+            <div className="pokedex-scanlines"></div>
+            <div className="pokedex-glare"></div>
+
+            {/* Render appropriate view inside Screen */}
+            {gameState === "menu" && (
+              <Menu
+                onStartGame={handleStartGame}
+                theme={theme}
+                toggleTheme={toggleTheme}
                 soundEnabled={soundEnabled}
                 toggleSound={toggleSound}
-                onRestart={() => handleStartGame(difficulty)}
-                onGoBack={handleGoHome}
               />
-              <GameBoard
-                difficulty={difficulty}
-                cards={cards}
-                selectedIndices={selectedIndices}
-                matchedIds={matchedIds}
-                mismatchedIndices={mismatchedIndices}
-                onCardSelect={handleCardSelect}
-                isProcessing={isProcessing}
-              />
-            </>
-          )}
-        </>
-      )}
+            )}
 
-      {gameState === "victory" && (
-        <VictoryScreen
-          difficulty={difficulty}
-          moves={moves}
-          accuracy={accuracy}
-          isHighScore={isHighScore}
-          onPlayAgain={() => handleStartGame(difficulty)}
-          onGoHome={handleGoHome}
-        />
-      )}
+            {gameState === "playing" && (
+              <>
+                {loading ? (
+                  <div className="menu-container scale-up" style={{ minHeight: "450px" }}>
+                    <div className="pokeball-spinner"></div>
+                    <h2 className="game-title" style={{ fontSize: "1.6rem", textShadow: "none" }}>
+                      <span className="title-poke">BOOTING...</span>
+                    </h2>
+                    <p className="game-subtitle" style={{ fontSize: "0.6rem" }}>loading PokéDex scan registry</p>
+                  </div>
+                ) : (
+                  <>
+                    <StatsBar
+                      matchedCount={clickedIds.size}
+                      totalPairs={difficultyCounts[difficulty]}
+                      bestStreak={bestStreaks[difficulty] || 0}
+                      soundEnabled={soundEnabled}
+                      toggleSound={toggleSound}
+                      onRestart={() => handleStartGame(difficulty)}
+                      onGoBack={handleGoHome}
+                    />
+                    <GameBoard
+                      difficulty={difficulty}
+                      cards={cards}
+                      showFront={showFront}
+                      wrongCardId={wrongCardId}
+                      onCardSelect={handleCardSelect}
+                      isProcessing={isProcessing}
+                    />
+                  </>
+                )}
+              </>
+            )}
+
+            {gameState === "gameover" && (
+              <GameOverScreen
+                streak={clickedIds.size}
+                maxStreak={difficultyCounts[difficulty]}
+                duplicatePokemon={getDuplicateCard()}
+                onPlayAgain={() => handleStartGame(difficulty)}
+                onGoHome={handleGoHome}
+              />
+            )}
+
+            {gameState === "victory" && (
+              <VictoryScreen
+                streak={clickedIds.size}
+                onPlayAgain={() => handleStartGame(difficulty)}
+                onGoHome={handleGoHome}
+              />
+            )}
+          </div>
+        </div>
+
+        {/* Bottom Hardware Console Controls (D-pad & Buttons) */}
+        <div className="pokedex-controls">
+          <div className="dpad-container">
+            <div className="dpad-btn horizontal"></div>
+            <div className="dpad-btn vertical"></div>
+            <div className="dpad-center"></div>
+          </div>
+          
+          <div className="console-pill-buttons">
+            <div className="pill-button"></div>
+            <div className="pill-button"></div>
+          </div>
+
+          <div className="action-buttons-group">
+            <div className="round-button b-btn">B</div>
+            <div className="round-button a-btn">A</div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

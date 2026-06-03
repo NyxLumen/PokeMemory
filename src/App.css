@@ -544,13 +544,13 @@ body.light-theme .lcd-btn {
 }
 
 .grid-medium {
-  grid-template-columns: repeat(4, minmax(110px, 150px));
+  grid-template-columns: repeat(3, minmax(120px, 160px));
   gap: 12px;
 }
 
 .grid-hard {
-  grid-template-columns: repeat(6, minmax(95px, 115px));
-  gap: 8px;
+  grid-template-columns: repeat(4, minmax(110px, 140px));
+  gap: 10px;
 }
 
 @media (max-width: 768px) {
@@ -559,12 +559,12 @@ body.light-theme .lcd-btn {
     gap: 12px;
   }
   .grid-medium {
-    grid-template-columns: repeat(4, minmax(95px, 125px));
+    grid-template-columns: repeat(3, minmax(100px, 130px));
     gap: 10px;
   }
   .grid-hard {
-    grid-template-columns: repeat(6, minmax(80px, 95px));
-    gap: 6px;
+    grid-template-columns: repeat(4, minmax(90px, 115px));
+    gap: 8px;
   }
 }
 

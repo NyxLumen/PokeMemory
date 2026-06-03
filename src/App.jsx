@@ -10,8 +10,8 @@ import "./App.css";
 
 const difficultyCounts = {
   easy: 6,
-  medium: 12,
-  hard: 18
+  medium: 9,
+  hard: 12
 };
 
 function App() {

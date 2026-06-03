@@ -28,8 +28,8 @@ export default function Menu({ onStartGame, theme, toggleTheme, soundEnabled, to
 
   const difficultyMax = {
     easy: 6,
-    medium: 12,
-    hard: 18
+    medium: 9,
+    hard: 12
   };
 
   return (

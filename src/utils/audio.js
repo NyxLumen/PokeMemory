@@ -221,21 +221,34 @@ export const audioHelper = {
     if (!ctx || ctx.state === 'suspended' || sfxVolume === 0) return;
     
     const time = ctx.currentTime;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
+    const notes = [
+      { f: 160, d: 0.15 },
+      { f: 130, d: 0.15 },
+      { f: 100, d: 0.15 },
+      { f: 75, d: 0.45, slideTo: 35 }
+    ];
     
-    osc.type = 'sawtooth';
-    // Sliding frequency down
-    osc.frequency.setValueAtTime(180, time);
-    osc.frequency.linearRampToValueAtTime(90, time + 0.2);
-    
-    gain.gain.setValueAtTime(0.07, time);
-    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.2);
-    
-    osc.connect(gain);
-    gain.connect(mainVolumeNode);
-    osc.start(time);
-    osc.stop(time + 0.2);
+    let offset = 0;
+    notes.forEach((note) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(note.f, time + offset);
+      if (note.slideTo) {
+        osc.frequency.linearRampToValueAtTime(note.slideTo, time + offset + note.d);
+      }
+      
+      gain.gain.setValueAtTime(0.08, time + offset);
+      gain.gain.exponentialRampToValueAtTime(0.001, time + offset + note.d);
+      
+      osc.connect(gain);
+      gain.connect(mainVolumeNode);
+      osc.start(time + offset);
+      osc.stop(time + offset + note.d + 0.05);
+      
+      offset += note.d - 0.02; // slight overlap
+    });
   },
 
   playClick() {
@@ -264,14 +277,31 @@ export const audioHelper = {
     if (!ctx || ctx.state === 'suspended' || sfxVolume === 0) return;
     
     const time = ctx.currentTime;
-    // Classic retro victory theme: C5, E5, G5, C6 (longer), then a short melody
+    // Triumphant 8-bit scale climb + major chord resolve theme
     const melody = [
-      { f: 523.25, d: 0.1 }, // C5
-      { f: 659.25, d: 0.1 }, // E5
-      { f: 783.99, d: 0.1 }, // G5
-      { f: 1046.50, d: 0.2 }, // C6
-      { f: 880.00, d: 0.1 }, // A5
-      { f: 1046.50, d: 0.3 }  // C6
+      // Fast scale climb
+      { f: 523.25, d: 0.08 }, // C5
+      { f: 587.33, d: 0.08 }, // D5
+      { f: 659.25, d: 0.08 }, // E5
+      { f: 698.46, d: 0.08 }, // F5
+      { f: 783.99, d: 0.08 }, // G5
+      { f: 880.00, d: 0.08 }, // A5
+      { f: 987.77, d: 0.08 }, // B5
+      { f: 1046.50, d: 0.16 }, // C6
+      
+      // Happy riff
+      { f: 987.77, d: 0.08 }, // B5
+      { f: 1046.50, d: 0.08 }, // C6
+      { f: 1174.66, d: 0.16 }, // D6
+      { f: 1046.50, d: 0.08 }, // C6
+      { f: 1174.66, d: 0.08 }, // D6
+      { f: 1318.51, d: 0.3 }, // E6 (hold)
+      
+      // Rhythmic finish
+      { f: 1174.66, d: 0.12 }, // D6
+      { f: 1046.50, d: 0.12 }, // C6
+      { f: 783.99, d: 0.12 }, // G5
+      { f: 1046.50, d: 0.4 }  // C6
     ];
     
     let currentOffset = 0;

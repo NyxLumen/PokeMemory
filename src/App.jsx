@@ -59,13 +59,32 @@ function App() {
     localStorage.setItem("pokememory_sound", JSON.stringify(soundEnabled));
     if (soundEnabled) {
       audioHelper.setVolume(0.5, 0.15);
-      if (gameState === "playing") {
+      if (gameState === "playing" || gameState === "menu") {
         audioHelper.startBGM();
       }
     } else {
       audioHelper.setVolume(0, 0);
       audioHelper.stopBGM();
     }
+  }, [soundEnabled, gameState]);
+
+  // Start BGM on first gesture (bypasses browser autoplay block)
+  useEffect(() => {
+    const startOnGesture = () => {
+      if (soundEnabled && (gameState === "playing" || gameState === "menu")) {
+        audioHelper.startBGM();
+      }
+      window.removeEventListener("click", startOnGesture);
+      window.removeEventListener("keydown", startOnGesture);
+    };
+
+    window.addEventListener("click", startOnGesture);
+    window.addEventListener("keydown", startOnGesture);
+
+    return () => {
+      window.removeEventListener("click", startOnGesture);
+      window.removeEventListener("keydown", startOnGesture);
+    };
   }, [soundEnabled, gameState]);
 
   // Cleanup BGM

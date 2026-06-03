@@ -22,8 +22,9 @@ export default function VictoryScreen({
     let animationFrameId;
 
     const resizeCanvas = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width || canvas.offsetWidth || 300;
+      canvas.height = rect.height || canvas.offsetHeight || 400;
     };
     window.addEventListener("resize", resizeCanvas);
     resizeCanvas();
